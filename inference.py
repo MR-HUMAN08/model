@@ -134,8 +134,6 @@ async def run_task(
                     )
                 except Exception:
                     pass
-
-            action_str = remaining[0]
             obs = env.step(RedTeamAction(action=action_str), episode_id=episode_id)
 
             reward = 0.10
