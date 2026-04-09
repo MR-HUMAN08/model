@@ -128,7 +128,7 @@ async def run_task(
                             },
                             {"role": "user", "content": user_prompt},
                         ],
-                        temperature=0.0,
+                        temperature=0,
                         max_tokens=16,
                         timeout=8,
                     )

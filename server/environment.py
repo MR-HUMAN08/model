@@ -42,9 +42,9 @@ def safe_reward(r: float) -> float:
     if v != v:
         return 0.10
     v = max(0.10, min(0.90, v))
-    if v <= 0.0:
+    if v <= 0:
         return 0.10
-    if v >= 1.0:
+    if v >= 1:
         return 0.90
     return round(v, 3)
 
@@ -145,11 +145,12 @@ class RedTeamPentestEnvironment(Environment[RedTeamAction, RedTeamObservation, R
     @property
     def state(self) -> RedTeamState:
         required = self.current_task["required_steps"]
-        progress = len(self.completed_steps) / len(required) if required else 0.0
+        raw_progress = len(self.completed_steps) / len(required) if required else 0.1
+        progress = max(0.1, min(0.9, raw_progress))
         return RedTeamState(
             episode=self.episode,
             task=self.current_task["name"],
-            progress=round(max(0.0, min(1.0, progress)), 3),
+            progress=round(progress, 3),
         )
 
     def _make_observation(self, current_state: str, output: str, reward: float, done: bool) -> RedTeamObservation:
@@ -263,7 +264,7 @@ class RedTeamPentestEnvironment(Environment[RedTeamAction, RedTeamObservation, R
 
             # Chain bonus scales with progression when the chain is clean.
             step_position = len(self.completed_steps)
-            reward = base + (CHAIN_BONUS * step_position if self.mistakes == 0 else 0.0)
+            reward = base + (CHAIN_BONUS * step_position if self.mistakes == 0 else 0)
 
             done = len(self.completed_steps) == len(required_steps)
             if done:

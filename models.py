@@ -33,3 +33,6 @@ class RedTeamState(State):
     episode: int = Field(description="Current episode counter.")
     task: str = Field(description="Current task name.")
     progress: float = Field(description="Normalized completion progress from 0.0 to 1.0.")
+
+    def __call__(self) -> "RedTeamState":
+        return self

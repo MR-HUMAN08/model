@@ -1,4 +1,4 @@
-"""Grader for RedTeam PentestLab - scores STRICTLY inside (0.0, 1.0) exclusive."""
+"""Grader for RedTeam PentestLab - scores STRICTLY inside (0, 1) exclusive."""
 
 import json
 import re
@@ -13,7 +13,7 @@ TASK_IDS = ["alpha", "bravo", "charlie"]
 
 def strict_clamp(score: float) -> float:
     """
-    Clamp score to STRICTLY inside (0.0, 1.0).
+    Clamp score to STRICTLY inside (0, 1).
 
     This is the ONLY function that sets score bounds.
     Every score - per-step, per-task, overall - passes through here.
@@ -34,16 +34,16 @@ def strict_clamp(score: float) -> float:
 
     s = max(SCORE_FLOOR, min(SCORE_CEIL, s))
 
-    if s <= 0.0:
+    if s <= 0:
         return SCORE_FLOOR
-    if s >= 1.0:
+    if s >= 1:
         return SCORE_CEIL
 
     s = round(s, 4)
 
-    if s <= 0.0:
+    if s <= 0:
         return SCORE_FLOOR
-    if s >= 1.0:
+    if s >= 1:
         return SCORE_CEIL
 
     return s
@@ -129,7 +129,7 @@ def make_fallback_task(task_id: str) -> Dict:
 
 def grade_task(data: Dict) -> Tuple[float, Dict]:
     """
-    Grade one task. Returns (score, details) where score is strictly in (0.0, 1.0).
+    Grade one task. Returns (score, details) where score is strictly in (0, 1).
 
         Scoring breakdown (designed so theoretical max < 0.90, min > 0.10):
             Base:           0.35 (success) or 0.15 (failure)
@@ -144,18 +144,18 @@ def grade_task(data: Dict) -> Tuple[float, Dict]:
 
     score = 0.35 if success else 0.15
 
-    total_reward = sum(max(0.0, r) for r in rewards)
-    reward_bonus = min((total_reward / 0.80) * 0.30, 0.30) if total_reward > 0 else 0.0
+    total_reward = sum(max(0, r) for r in rewards)
+    reward_bonus = min((total_reward / 0.80) * 0.30, 0.30) if total_reward > 0 else 0
     score += reward_bonus
 
-    violations = sum(1 for s in step_details if float(s.get("reward", 0.0)) < 0.0)
+    violations = sum(1 for s in step_details if float(s.get("reward", 0)) < 0)
     score -= min(violations * 0.03, 0.09)
 
     score = strict_clamp(score)
     details = {
         "success": success,
         "steps_taken": len(rewards),
-        "total_reward": round(sum(rewards), 4) if rewards else 0.0,
+        "total_reward": round(sum(rewards), 4) if rewards else 0,
         "violations": violations,
         "final_score": score,
     }
@@ -200,7 +200,7 @@ def _run() -> None:
             details = {"final_score": SCORE_FLOOR, "success": False}
 
         score = strict_clamp(score)
-        if not (0.0 < score < 1.0):
+        if not (0 < score < 1):
             print(f"WARNING: out-of-range score {score} on task {i}; forcing floor", file=sys.stderr)
             score = SCORE_FLOOR
 

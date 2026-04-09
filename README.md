@@ -82,6 +82,12 @@ openenv validate
 openenv validate --url http://localhost:8000 --json --verbose
 ```
 
+### Validate Decimal Bounds
+
+```bash
+python task_validation.py
+```
+
 ## Inference and Grading
 
 Run baseline inference:
