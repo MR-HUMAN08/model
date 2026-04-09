@@ -1,0 +1,64 @@
+{
+  "generated_at": "2026-04-09 05:39:41 UTC",
+  "phase1_checklist": {
+    "hf_space_deploys": {
+      "status": "BLOCKED",
+      "details": "Requires deployed HF Space URL; local environment cannot validate remote deployment ping."
+    },
+    "openenv_spec_compliance": {
+      "status": "PASS",
+      "details": "openenv.yaml fields validated locally"
+    },
+    "reset_step_state_endpoints": {
+      "status": "PASS",
+      "details": "root=200,health=200,paths_ok=True"
+    },
+    "dockerfile_builds": {
+      "status": "BLOCKED",
+      "details": "=repository%3Aopenenv%2Fopenenv-base%3Apull&service=ghcr.io: 403 Forbidden\n------\n > [internal] load metadata for ghcr.io/openenv/openenv-base:latest:\n------\nDockerfile:12\n--------------------\n  10 |     RUN . /app/.venv/bin/activate && uv sync --no-dev\n  11 |     \n  12 | >>> FROM ghcr.io/openenv/openenv-base:latest AS runtime\n  13 |     \n  14 |     WORKDIR /app\n--------------------\nERROR: failed to build: failed to solve: failed to fetch anonymous token: unexpected status from GET request to https://ghcr.io/token?scope=repository%3Aopenenv%2Fopenenv-base%3Apull&service=ghcr.io: 403 Forbidden\n"
+    },
+    "baseline_reproduces": {
+      "status": "PASS",
+      "details": "exit_code=0"
+    },
+    "strict_log_blocks": {
+      "status": "PASS",
+      "details": "start_blocks=3, end_blocks=3"
+    },
+    "task_scores_strict_range": {
+      "status": "PASS",
+      "details": "task_scores=[0.53, 0.5562, 0.6125], overall=0.5662"
+    }
+  },
+  "phase2_readiness": {
+    "rl_signal_progression": {
+      "status": "PASS",
+      "details": "[0.13, 0.14, 0.21]"
+    },
+    "ctf_challenges_solvable": {
+      "status": "PASS",
+      "details": "[True, True, True]"
+    },
+    "pentest_report_artifact": {
+      "status": "PASS",
+      "details": "tasks=3, ctf_solved=3"
+    }
+  },
+  "runtime_notes": {
+    "inference_runtime_under_20min": {
+      "status": "PASS",
+      "details": "1.81s"
+    },
+    "resource_profile_note": {
+      "status": "INFO",
+      "details": "Designed lightweight Python logic with deterministic actions; suitable for low-resource CPU execution."
+    },
+    "youtube_walkthrough_alignment": {
+      "status": "BLOCKED",
+      "details": "Direct playback/transcript extraction from provided YouTube URL is blocked by Google sign-in in this environment."
+    }
+  },
+  "blockers": [
+    "Docker build blocked in this environment due ghcr.io base image pull authorization (403)."
+  ]
+}
