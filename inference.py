@@ -21,9 +21,17 @@ except Exception:
     from .models import RedTeamAction
 
 
-API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:11434/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
-API_KEY = os.getenv("API_KEY", os.getenv("HF_TOKEN", "ollama"))
+# LLM Configuration with OpenAI defaults
+API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+MODEL_NAME = os.getenv("MODEL_NAME", "o3-mini")
+
+# API Key: prioritize OPENAI_API_KEY, fallback to HF_TOKEN
+API_KEY = os.getenv("OPENAI_API_KEY") or os.getenv("HF_TOKEN")
+
+if not API_KEY:
+    raise ValueError(
+        "API key is required. Set either OPENAI_API_KEY or HF_TOKEN environment variable."
+    )
 
 BENCHMARK = "redteam_pentest"
 TASK_TOKENS = ["alpha", "bravo", "charlie"]
@@ -187,8 +195,9 @@ async def run_task(
 async def main() -> None:
     client: Optional[OpenAI]
     try:
-        client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY, timeout=15)
-    except Exception:
+        client = OpenAI(base_url=API_BASE_URL, api_key=API_KEY, timeout=30)
+    except Exception as e:
+        print(f"# Warning: Failed to initialize OpenAI client: {e}", flush=True)
         client = None
 
     env = RedTeamPentestEnvironment()

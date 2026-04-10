@@ -106,9 +106,12 @@ Inference also writes a structured pentest report to pentest_report.json.
 
 ## Environment Variables
 
-- API_BASE_URL (default: http://localhost:11434/v1)
-- MODEL_NAME (default: gpt-4o-mini)
-- API_KEY (fallback: HF_TOKEN, then ollama)
+- API_BASE_URL (default: https://api.openai.com/v1) - API endpoint for the LLM
+- MODEL_NAME (default: o3-mini) - Model identifier used for inference (OpenAI o3-mini)
+- OPENAI_API_KEY (required) - OpenAI API key; if not set, falls back to HF_TOKEN
+- HF_TOKEN (required if OPENAI_API_KEY not set) - Alternative API key environment variable
+
+**Note:** At least one of OPENAI_API_KEY or HF_TOKEN must be set, or the inference will fail at startup.
 
 ## Docker
 

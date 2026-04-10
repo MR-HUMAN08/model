@@ -54,6 +54,9 @@ Thumbs.db
 *.pid
 out.txt
 inference_output.txt
+pentest_report.json
+PRE_SUBMISSION_REPORT.json
+PRE_SUBMISSION_REPORT.md
 
 # Environment and secrets
 .env
