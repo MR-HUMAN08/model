@@ -34,22 +34,7 @@ if not API_KEY:
     )
 
 BENCHMARK = "redteam_pentest"
-TASK_TOKENS = ["alpha", "bravo", "charlie"]
-STEP_TOKENS = [
-    "one",
-    "two",
-    "three",
-    "four",
-    "five",
-    "six",
-    "seven",
-    "eight",
-    "nine",
-    "ten",
-    "eleven",
-    "twelve",
-    "thirteen",
-]
+TASK_TOKENS = ["task_1", "task_2", "task_3"]
 
 TASKS: List[Dict[str, object]] = [
     {"index": 0, "required_steps": ["scan", "enumerate", "exploit"]},
@@ -78,10 +63,10 @@ def log_start(task_id: str, env_name: str, model_name: str) -> None:
     print(f"[START] task={task_id} env={env_name} model={model_name}", flush=True)
 
 
-def log_step(step_label: str, action: str, reward: float, done: bool, error: Optional[str] = None) -> None:
+def log_step(step_num: int, action: str, reward: float, done: bool, error: Optional[str] = None) -> None:
     err = _normalize_error(error)
     print(
-        f"[STEP] step={step_label} action={action} reward={_normalize_reward(reward):.2f} "
+        f"[STEP] step={step_num} action={action} reward={_normalize_reward(reward):.2f} "
         f"done={str(done).lower()} error={err}",
         flush=True,
     )
@@ -90,7 +75,7 @@ def log_step(step_label: str, action: str, reward: float, done: bool, error: Opt
 def log_end(success: bool, rewards: List[float]) -> None:
     safe_rewards = rewards if rewards else [0.10]
     rewards_str = ",".join(f"{_normalize_reward(r):.2f}" for r in safe_rewards)
-    print(f"[END] success={str(success).lower()} rewards={rewards_str}", flush=True)
+    print(f"[END] success={str(success).lower()} steps={len(safe_rewards)} rewards={rewards_str}", flush=True)
 
 
 async def run_task(
@@ -165,8 +150,7 @@ async def run_task(
             actions_taken.append(action_str)
             states_seen.append(current_state)
 
-            step_label = STEP_TOKENS[min(global_step - 1, len(STEP_TOKENS) - 1)]
-            log_step(step_label, action_str, reward, done)
+            log_step(global_step, action_str, reward, done)
             task_rewards.append(_normalize_reward(reward))
             global_step += 1
 

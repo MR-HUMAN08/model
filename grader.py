@@ -93,7 +93,7 @@ def parse_inference_output(output: str) -> List[Dict]:
                 )
 
         elif line.startswith("[END]") and active:
-            m = re.search(r"success=(\w+)\s+rewards=([\d.,\s.eE+-]*)", line)
+            m = re.search(r"success=(\w+)(?:\s+steps=\d+)?\s+rewards=([\d.,\s.eE+-]*)", line)
             if m:
                 current["success"] = m.group(1).lower() == "true"
                 raw_rewards = m.group(2) or ""
