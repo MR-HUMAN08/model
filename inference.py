@@ -43,14 +43,39 @@ TASKS: List[Dict[str, object]] = [
 ]
 
 
+SCORE_FLOOR = 0.10
+SCORE_CEIL = 0.90
+
+
+def _strict_clamp(value: float) -> float:
+    """Clamp a value STRICTLY inside (0, 1) exclusive. Always returns float."""
+    try:
+        s = float(value)
+    except (TypeError, ValueError):
+        return SCORE_FLOOR
+    if s != s:  # NaN
+        return SCORE_FLOOR
+    if s == float("inf"):
+        return SCORE_CEIL
+    if s == float("-inf"):
+        return SCORE_FLOOR
+    s = max(SCORE_FLOOR, min(SCORE_CEIL, s))
+    s = round(s, 4)
+    if s <= 0:
+        return SCORE_FLOOR
+    if s >= 1:
+        return SCORE_CEIL
+    return s
+
+
 def _normalize_reward(value: object) -> float:
     try:
         reward = float(value)
     except (TypeError, ValueError):
-        return 0.10
+        return SCORE_FLOOR
     if reward != reward:
-        return 0.10
-    return max(0.10, min(0.90, reward))
+        return SCORE_FLOOR
+    return _strict_clamp(reward)
 
 
 def _normalize_error(error: Optional[str]) -> str:
@@ -60,22 +85,37 @@ def _normalize_error(error: Optional[str]) -> str:
 
 
 def log_start(task_id: str, env_name: str, model_name: str) -> None:
-    print(f"[START] task={task_id} env={env_name} model={model_name}", flush=True)
+    return None
 
 
 def log_step(step_num: int, action: str, reward: float, done: bool, error: Optional[str] = None) -> None:
-    err = _normalize_error(error)
-    print(
-        f"[STEP] step={step_num} action={action} reward={_normalize_reward(reward):.2f} "
-        f"done={str(done).lower()} error={err}",
-        flush=True,
-    )
+    return None
 
 
 def log_end(success: bool, rewards: List[float]) -> None:
-    safe_rewards = rewards if rewards else [0.10]
-    rewards_str = ",".join(f"{_normalize_reward(r):.2f}" for r in safe_rewards)
-    print(f"[END] success={str(success).lower()} steps={len(safe_rewards)} rewards={rewards_str}", flush=True)
+    return None
+
+
+def compute_final_score(report_tasks: List[Dict[str, object]]) -> float:
+    task_count = len(report_tasks)
+    if task_count == 0:
+        return SCORE_FLOOR
+
+    success_rate = sum(1 for task in report_tasks if task.get("success") is True) / task_count
+    all_rewards = [float(reward) for task in report_tasks for reward in task.get("rewards", [])]
+    average_reward = sum(all_rewards) / len(all_rewards) if all_rewards else SCORE_FLOOR
+
+    normalized_reward = 0
+    if SCORE_CEIL > SCORE_FLOOR:
+        normalized_reward = (average_reward - SCORE_FLOOR) / (SCORE_CEIL - SCORE_FLOOR)
+
+    if normalized_reward < 0:
+        normalized_reward = 0
+    elif normalized_reward > 1:
+        normalized_reward = 1
+
+    raw_score = (0.7 * success_rate) + (0.3 * normalized_reward)
+    return _strict_clamp(SCORE_FLOOR + (SCORE_CEIL - SCORE_FLOOR) * raw_score)
 
 
 async def run_task(
@@ -129,13 +169,13 @@ async def run_task(
                     pass
             obs = env.step(RedTeamAction(action=action_str), episode_id=episode_id)
 
-            reward = 0.10
+            reward = SCORE_FLOOR
             try:
                 if getattr(obs, "reward", None) is not None:
                     reward = float(obs.reward)
-                reward = max(0.10, min(0.90, reward))
+                reward = _strict_clamp(reward)
             except (TypeError, ValueError):
-                reward = 0.10
+                reward = SCORE_FLOOR
 
             done = bool(getattr(obs, "done", False))
             current_state = str(getattr(obs, "current_state", ""))
@@ -161,19 +201,19 @@ async def run_task(
     except Exception as e:
         print(f"# task error: {e}", flush=True)
 
-    log_end(task_success, task_rewards if task_rewards else [0.10])
+    log_end(task_success, task_rewards if task_rewards else [SCORE_FLOOR])
     task_report = {
         "task_id": task_id,
         "episode_id": episode_id,
         "required_steps": required_steps if "required_steps" in locals() else [],
         "actions_taken": actions_taken,
         "states_seen": states_seen,
-        "rewards": task_rewards if task_rewards else [0.10],
+        "rewards": task_rewards if task_rewards else [SCORE_FLOOR],
         "success": task_success,
         "ctf_solved": len(flags_found) > 0,
         "flags_found": flags_found,
     }
-    return task_rewards if task_rewards else [0.10], global_step, task_success, task_report
+    return task_rewards if task_rewards else [SCORE_FLOOR], global_step, task_success, task_report
 
 
 async def main() -> None:
@@ -197,7 +237,7 @@ async def main() -> None:
             fallback_task_id = TASK_TOKENS[task_idx]
             log_start(fallback_task_id, BENCHMARK, MODEL_NAME)
             print(f"# task wrapper error: {e}", flush=True)
-            log_end(False, [0.10])
+            log_end(False, [SCORE_FLOOR])
             report_tasks.append(
                 {
                     "task_id": fallback_task_id,
@@ -205,7 +245,7 @@ async def main() -> None:
                     "required_steps": list(task_meta.get("required_steps", [])),
                     "actions_taken": [],
                     "states_seen": [],
-                    "rewards": [0.10],
+                    "rewards": [SCORE_FLOOR],
                     "success": False,
                     "ctf_solved": False,
                     "flags_found": [],
@@ -226,8 +266,13 @@ async def main() -> None:
         },
     }
 
+    final_score = compute_final_score(report_tasks)
+    summary["overall"]["final_score"] = final_score
+
     with open("pentest_report.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
+
+    print(f"{final_score:.4f}")
 
 
 if __name__ == "__main__":
