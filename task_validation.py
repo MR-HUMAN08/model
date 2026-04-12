@@ -12,7 +12,7 @@ from typing import Iterator, List, Sequence
 
 SOURCE_EXTENSIONS = {".py"}
 TEXT_EXTENSIONS = {".json", ".yaml", ".yml", ".txt"}
-SKIP_DIRS = {".git", ".venv", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache"}
+SKIP_DIRS = {".git", ".venv", "venv", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache"}
 DECIMAL_PATTERN = re.compile(
     r"(?<![\w.])[+-]?(?:\d+\.\d*|\.\d+|\d+(?:\.\d*)?[eE][+-]?\d+)(?![\w.])"
 )
